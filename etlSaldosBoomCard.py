@@ -15,11 +15,12 @@ merged_column = pd.concat([df[col] for col in df.columns], ignore_index=False)
 # Se crea un dataframe a partir de la Serie que se obtuvo del merge
 df_merged = pd.DataFrame(merged_column)
 
-# Se renombra la columna, para poder referenciar el mismo y poder hacer los filtros correspondiente
+# Se renombra la columna, para poder referenciar el mismo y poder hacer los filtros correspondiente, se quitan los espacios al final de string de cada registro
 # Cómo solo queremos los movimientos tipo C, agregamos una columna que nos indique el tipo de movimiento df_merged['tipoRegistro'] y después quitamos del df los registros que son diferentes de "C"
 # Agregamos una segunda columna para quitar los registros que en el nombre del cliente los 3 primeros caracteres sean 'SGN' e 'INN'
 
 df_merged = df_merged.rename(columns={0:'registro'})
+df_merged['registro'] = df_merged['registro'].apply(lambda x: str(x).rstrip())
 df_merged['tipoRegistro'] = df_merged['registro'].apply(lambda x: str(x)[0:1])
 df_merged = df_merged[df_merged['tipoRegistro']=='C'].reset_index(drop=True)
 df_merged['filtroNombre'] = df_merged['registro'].apply(lambda x: str(x)[16:19])
