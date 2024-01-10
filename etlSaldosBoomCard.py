@@ -1,11 +1,27 @@
+import pymongo
 import pandas as pd
 import re
+
+mongo_url = 'mongodb+srv://prod1:Techreo1234@techreocluster.yfzhq7e.mongodb.net/?retryWrites=true&w=majority'
+
+# Connect to MongoDB
+client = pymongo.MongoClient(mongo_url)
+
+# # Access a specific database
+db = client["boomtrsc"]
+
+# # Access a specific collection within the database
+collection = db["Payments"]
 
 
 df_saldos = pd.DataFrame()
 
 # Se lee el archivo txt o csv
-df = pd.read_csv('saldosG2_758_20231118_0939.txt', delimiter='\t', header=None)
+# df = pd.read_csv('saldosG2_758_20231216_0851.txt', delimiter='\t', header=None, encoding='UTF-8')
+df = pd.read_csv('saldosG2_758_20231216_0851.txt', delimiter='\t', header=None, encoding='CP437')
+# df = pd.read_csv('saldosG2_758_20231216_0851.txt', delimiter='\t', header=None, encoding='latin1')
+
+
 
 # print(df.info())
 
@@ -20,6 +36,7 @@ df_merged = pd.DataFrame(merged_column)
 # Agregamos una segunda columna para quitar los registros que en el nombre del cliente los 3 primeros caracteres sean 'SGN' e 'INN'
 
 df_merged = df_merged.rename(columns={0:'registro'})
+# print(df_merged.at[2037, 'registro'])
 df_merged['registro'] = df_merged['registro'].apply(lambda x: str(x).rstrip())
 df_merged['tipoRegistro'] = df_merged['registro'].apply(lambda x: str(x)[0:1])
 df_merged = df_merged[df_merged['tipoRegistro']=='C'].reset_index(drop=True)
@@ -42,13 +59,20 @@ df_saldos['PagoMinimo'] = df_merged['registro'].apply(lambda x: re.sub(r'^0+(?=\
 print(df_saldos)
 
 for ind in df_saldos.index:
-    document = {
-        'CuentaCredencial': df_saldos.at[ind, 'CuentaCredencial'],
-        'FechaLimitePago': df_saldos.at[ind, 'FechaLimitePago'],
-        'PagoParaNoGenerarIntereses': df_saldos.at[ind, 'PagoParaNoGenerarIntereses'],
-        'PagoMinimo': df_saldos.at[ind, 'PagoMinimo']
-    }
-    print(document)
+
+    if(df_saldos.at[ind, 'CuentaCredencial'] != '559990411'):
+        document = {
+            'CuentaCredencial': df_saldos.at[ind, 'CuentaCredencial'],
+            'FechaLimitePago': df_saldos.at[ind, 'FechaLimitePago'],
+            'PagoParaNoGenerarIntereses': df_saldos.at[ind, 'PagoParaNoGenerarIntereses'],
+            'PagoMinimo': df_saldos.at[ind, 'PagoMinimo']
+        }
+        print(document)
+        # result = collection.insert_one(document)
+        # print(f'Inserted document ID: {result.inserted_id} datos: {document}')
+
+
+
 
 
 
